@@ -1,15 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 var board = make(map[string]string)
 var currentPlayer = "X"
 var gameState = "ongoing"
 var totalMoves = 0
+var boardSize = 4
 
 func main() {
 	initializeBoard()
-
 	for gameState == "ongoing" {
 		printBoard()
 		makeMove()
@@ -17,18 +20,17 @@ func main() {
 		switchPlayers()
 		totalMoves++
 	}
-
 	printBoard()
 	if gameState == "win" {
-		fmt.Println("Player", currentPlayer, "winner!")
+		fmt.Println("Player", currentPlayer, "is the winner!")
 	} else {
-		fmt.Println("draw!")
+		fmt.Println("It's a draw!")
 	}
 }
 
 func initializeBoard() {
-	for i := 1; i <= 3; i++ {
-		for j := 1; j <= 3; j++ {
+	for i := 1; i <= boardSize; i++ {
+		for j := 1; j <= boardSize; j++ {
 			board[fmt.Sprintf("%d%d", i, j)] = " "
 		}
 	}
@@ -36,8 +38,8 @@ func initializeBoard() {
 
 func printBoard() {
 	fmt.Println("-------------")
-	for i := 1; i <= 3; i++ {
-		for j := 1; j <= 3; j++ {
+	for i := 1; i <= boardSize; i++ {
+		for j := 1; j <= boardSize; j++ {
 			fmt.Printf("| %s ", board[fmt.Sprintf("%d%d", i, j)])
 		}
 		fmt.Println("|\n-------------")
@@ -46,12 +48,14 @@ func printBoard() {
 
 func makeMove() {
 	var position string
-
 	for {
 		fmt.Print("Player ", currentPlayer, ", enter position (for example, 21): ")
 		fmt.Scanln(&position)
 
-		if board[position] == " " {
+		row, _ := strconv.Atoi(string(position[0]))
+		col, _ := strconv.Atoi(string(position[1]))
+
+		if row > 0 && row <= boardSize && col > 0 && col <= boardSize && board[position] == " " {
 			board[position] = currentPlayer
 			break
 		} else {
@@ -61,30 +65,66 @@ func makeMove() {
 }
 
 func checkWinCondition() {
-	if totalMoves < 5 {
+	if totalMoves < (2*boardSize)-1 {
 		return
 	}
 
-	var winningMoves = [8][3]string{
-		{"11", "12", "13"},
-		{"21", "22", "23"},
-		{"31", "32", "33"},
-		{"11", "21", "31"},
-		{"12", "22", "32"},
-		{"13", "23", "33"},
-		{"11", "22", "33"},
-		{"13", "22", "31"},
-	}
-
-	for i := 0; i < len(winningMoves); i++ {
-		combination := winningMoves[i]
-		if board[combination[0]] == currentPlayer && board[combination[1]] == currentPlayer && board[combination[2]] == currentPlayer {
+	// Rows
+	for i := 1; i <= boardSize; i++ {
+		win := true
+		for j := 1; j <= boardSize; j++ {
+			if board[fmt.Sprintf("%d%d", i, j)] != currentPlayer {
+				win = false
+				break
+			}
+		}
+		if win {
 			gameState = "win"
 			return
 		}
 	}
 
-	if totalMoves == 9 {
+	// Columns
+	for j := 1; j <= boardSize; j++ {
+		win := true
+		for i := 1; i <= boardSize; i++ {
+			if board[fmt.Sprintf("%d%d", i, j)] != currentPlayer {
+				win = false
+				break
+			}
+		}
+		if win {
+			gameState = "win"
+			return
+		}
+	}
+
+	// Diagonals
+	win := true
+	for i := 1; i <= boardSize; i++ {
+		if board[fmt.Sprintf("%d%d", i, i)] != currentPlayer {
+			win = false
+			break
+		}
+	}
+	if win {
+		gameState = "win"
+		return
+	}
+
+	win = true
+	for i := 1; i <= boardSize; i++ {
+		if board[fmt.Sprintf("%d%d", i, boardSize-i+1)] != currentPlayer {
+			win = false
+			break
+		}
+	}
+	if win {
+		gameState = "win"
+		return
+	}
+
+	if totalMoves == (boardSize * boardSize) {
 		gameState = "draw"
 	}
 }
